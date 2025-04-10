@@ -12,33 +12,37 @@ const Predict = () => {
   const [loading, setLoading] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
 
-  const setupCamera = async () => {
-    try {
-      // Stop any existing stream first
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-
-      // Get a new stream
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      
-      // Store the stream reference
-      streamRef.current = stream;
-      
-      // Connect to video element if it exists
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        
-        // Make sure video starts playing
-        videoRef.current.play().catch(err => {
-          console.error("Error playing video:", err);
-        });
-      }
-    } catch (err) {
-      console.error("Camera access denied:", err);
-      setMessage('❌ Camera access denied. Please enable camera permissions.');
+ const setupCamera = async () => {
+  try {
+    // Stop any existing stream first
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
     }
-  };
+
+    // Get a new stream with rear camera specified
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { exact: "environment" }
+      }
+    });
+    
+    // Store the stream reference
+    streamRef.current = stream;
+    
+    // Connect to video element if it exists
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      
+      // Make sure video starts playing
+      videoRef.current.play().catch(err => {
+        console.error("Error playing video:", err);
+      });
+    }
+  } catch (err) {
+    console.error("Camera access denied:", err);
+    setMessage('❌ Camera access denied or rear camera not available. Please check permissions.');
+  }
+};
 
   useEffect(() => {
     setupCamera();
