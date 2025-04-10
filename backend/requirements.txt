@@ -8,3 +8,5 @@ passlib
 sqlalchemy
 tensorflow
 uvicorn
+psycopg2-binary
+
