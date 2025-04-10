@@ -1,7 +1,6 @@
 ﻿Pillow
 auth
 cloudinary
-database
 datetime
 dotenv
 fastapi
