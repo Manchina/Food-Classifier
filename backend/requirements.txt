@@ -9,4 +9,4 @@ sqlalchemy
 tensorflow
 uvicorn
 psycopg2-binary
-
+python-multipart
