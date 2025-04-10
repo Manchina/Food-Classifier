@@ -12,7 +12,7 @@ export default function History() {
       try {
         setLoading(true);
         const token = localStorage.getItem("authToken");
-        const res = await axios.get("http://localhost:8000/history", {
+        const res = await axios.get("https://food-classifier-ihbm.onrender.com/history", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
