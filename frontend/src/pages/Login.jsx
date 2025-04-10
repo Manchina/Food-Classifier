@@ -25,7 +25,7 @@ const Login = () => {
       formData.append('username', username);
       formData.append('password', password);
 
-      const response = await axios.post('http://localhost:8000/login', formData, {
+      const response = await axios.post('https://food-classifier-ihbm.onrender.com/login', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
