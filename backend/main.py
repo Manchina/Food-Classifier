@@ -37,7 +37,7 @@ cloudinary.config(
 Base.metadata.create_all(bind=engine)
 
 # === LOAD MODELS ===
-model = load_model("food_classifier_mobilenet.h5")
+model = load_model("food_classifier_model.h5")
 food_detector = load_model("food.h5")
 
 # === CLASS LABELS ===
