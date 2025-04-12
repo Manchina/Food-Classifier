@@ -6,7 +6,8 @@ from PIL import Image
 import numpy as np
 import io
 from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.image import img_to_array
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+from tensorflow.keras.utils import img_to_array
 import cloudinary
 import cloudinary.uploader
 import os
@@ -37,23 +38,33 @@ cloudinary.config(
 Base.metadata.create_all(bind=engine)
 
 # === LOAD MODELS ===
-model = load_model("food_classifier_model.h5")
-food_detector = load_model("food.h5")
+new_model_path = "food_classifier_model.h5"
+if not os.path.exists(new_model_path):
+    raise FileNotFoundError(f"Model file '{new_model_path}' not found. Ensure it's in the same folder.")
 
-# === CLASS LABELS ===
+model = load_model(new_model_path)
+food_detector = load_model("food.h5")  # Keep the food detector model
+
+# === CLASS LABELS (updated to match main.py) ===
 class_labels = [
-    "Bread", "Dairy", "Dessert", "Egg", "Fried Food",
-    "Meat", "Noodles", "Rice", "Seafood", "Soup", "Vegetable"
+    'burger', 'butter_naan', 'chai', 'chapati', 'chole_bhature',
+    'dal_makhani', 'dhokla', 'fried_rice', 'idli', 'jalebi',
+    'kaathi_rolls', 'kadai_paneer', 'kulfi', 'masala_dosa', 'momos',
+    'paani_puri', 'pakode', 'pav_bhaji', 'pizza', 'samosa'
 ]
 
 # === IMAGE PROCESSING ===
 def preprocess_image(image_bytes):
+    """Process image for the new food classifier model"""
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image = image.resize((224, 224))
-    image = img_to_array(image) / 255.0
-    return np.expand_dims(image, axis=0)
+    image_array = img_to_array(image)
+    image_array = np.expand_dims(image_array, axis=0)
+    image_array = preprocess_input(image_array)  # MobileNetV2-specific preprocessing
+    return image_array
 
 def is_food(image_bytes):
+    """Check if the image contains food using the food detector model"""
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     image = image.resize((64, 64))
     image = img_to_array(image) / 255.0
@@ -100,7 +111,7 @@ async def predict_image(
     if not is_food_image:
         return {"prediction": "No Food Item Is Detected", "confidence": food_conf}
 
-    # Step 2: Multiclass Prediction
+    # Step 2: Multiclass Prediction (updated to use new model)
     processed_image = preprocess_image(image_bytes)
     predictions = model.predict(processed_image)
     predicted_index = np.argmax(predictions[0])
