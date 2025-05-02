@@ -16,7 +16,6 @@ from models import Base, User, Transaction
 from database import engine, get_db
 from auth import hash_password, authenticate_user, create_access_token, get_current_user
 
-# === INITIAL SETUP ===
 app = FastAPI()
 
 app.add_middleware(
@@ -38,12 +37,11 @@ cloudinary.config(
 Base.metadata.create_all(bind=engine)
 
 # === LOAD MODELS ===
-new_model_path = "food_classifier_model.h5"
+model_path = "food_classifier_model.h5"
 if not os.path.exists(new_model_path):
-    raise FileNotFoundError(f"Model file '{new_model_path}' not found. Ensure it's in the same folder.")
+    raise FileNotFoundError(f"Model file '{model_path}' not found. Ensure it's in the same folder.")
 
-model = load_model(new_model_path)
-food_detector = load_model("food.h5")  # Keep the food detector model
+model = load_model(model_path)
 
 # === CLASS LABELS (updated to match main.py) ===
 class_labels = [
@@ -63,14 +61,6 @@ def preprocess_image(image_bytes):
     image_array = preprocess_input(image_array)  # MobileNetV2-specific preprocessing
     return image_array
 
-def is_food(image_bytes):
-    """Check if the image contains food using the food detector model"""
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    image = image.resize((64, 64))
-    image = img_to_array(image) / 255.0
-    image = np.expand_dims(image, axis=0)
-    prediction = food_detector.predict(image)[0][0]
-    return prediction >= 0.5, float(prediction if prediction >= 0.5 else 1 - prediction)
 
 # === CLOUDINARY UPLOAD ===
 def upload_image_to_cloudinary(image_bytes):
@@ -106,22 +96,17 @@ async def predict_image(
 ):
     image_bytes = await image.read()
 
-    # Step 1: Is it food?
-    is_food_image, food_conf = is_food(image_bytes)
-    if not is_food_image:
-        return {"prediction": "No Food Item Is Detected", "confidence": food_conf}
-
-    # Step 2: Multiclass Prediction (updated to use new model)
+    # Step 1: Multiclass Prediction (updated to use new model)
     processed_image = preprocess_image(image_bytes)
     predictions = model.predict(processed_image)
     predicted_index = np.argmax(predictions[0])
     predicted_class = class_labels[predicted_index]
     confidence = float(predictions[0][predicted_index])
 
-    # Step 3: Upload image to Cloudinary
+    # Step 2: Upload image to Cloudinary
     image_url = upload_image_to_cloudinary(image_bytes)
 
-    # Step 4: Save Transaction
+    # Step 3: Save Transaction
     transaction = Transaction(
         user_id=current_user.id,
         image_url=image_url,

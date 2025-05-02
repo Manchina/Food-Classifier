@@ -2,6 +2,14 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Float, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
+import pytz  # <-- Add this import
+
+# Define IST timezone
+IST = pytz.timezone("Asia/Kolkata")
+
+# Function to get current IST time
+def get_ist_time():
+    return datetime.now(IST)
 
 class User(Base):
     __tablename__ = "users"
@@ -17,7 +25,7 @@ class Transaction(Base):
     image_url = Column(String)
     prediction = Column(String)
     confidence = Column(Float)
-    timestamp = Column(DateTime, default=datetime.utcnow)
+    timestamp = Column(DateTime, default=get_ist_time)  # <-- Uses IST time
     user_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="transactions")
