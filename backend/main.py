@@ -38,7 +38,7 @@ Base.metadata.create_all(bind=engine)
 
 # === LOAD MODELS ===
 model_path = "food_classifier_model.h5"
-if not os.path.exists(new_model_path):
+if not os.path.exists(model_path):
     raise FileNotFoundError(f"Model file '{model_path}' not found. Ensure it's in the same folder.")
 
 model = load_model(model_path)
