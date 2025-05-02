@@ -47,10 +47,10 @@ food_detector = load_model("food.h5")  # Keep the food detector model
 
 # === CLASS LABELS (updated to match main.py) ===
 class_labels = [
-    'burger', 'butter_naan', 'chai', 'chapati', 'chole_bhature',
-    'dal_makhani', 'dhokla', 'fried_rice', 'idli', 'jalebi',
-    'kaathi_rolls', 'kadai_paneer', 'kulfi', 'masala_dosa', 'momos',
-    'paani_puri', 'pakode', 'pav_bhaji', 'pizza', 'samosa'
+    'Burger', 'Butter Naan', 'Chai', 'Chapati', 'Chole Bhature',
+    'Dal Makhani', 'Dhokla', 'Fried Rice', 'Idli', 'Jalebi',
+    'Kaathi Rolls', 'Kadai Paneer', 'Kulfi', 'Masala Dosa', 'Momos',
+    'Paani_puri', 'Pakode', 'Pav Bhaji', 'Pizza', 'Samosa'
 ]
 
 # === IMAGE PROCESSING ===
