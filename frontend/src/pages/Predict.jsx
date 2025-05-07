@@ -156,29 +156,37 @@ const Predict = () => {
     setMessage('');
     setPrediction('');
 
-    // Create a preview of the uploaded image
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setCapturedImage(event.target.result);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Create a preview of the uploaded image
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCapturedImage(event.target.result);
+      };
+      reader.readAsDataURL(file);
 
-    const imageBitmap = await createImageBitmap(file);
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-    canvas.width = imageBitmap.width;
-    canvas.height = imageBitmap.height;
-    context.drawImage(imageBitmap, 0, 0);
+      // Process the image
+      const imageBitmap = await createImageBitmap(file);
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      canvas.width = imageBitmap.width;
+      canvas.height = imageBitmap.height;
+      context.drawImage(imageBitmap, 0, 0);
 
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    if (!hasObject(imageData)) {
-      setMessage('❌ No object detected! Try another image.');
-      setPrediction('');
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+      if (!hasObject(imageData)) {
+        setMessage('❌ No object detected! Try another image.');
+        setPrediction('');
+        setLoading(false);
+        return;
+      }
+
+      // Upload the image
+      uploadImage(file);
+    } catch (err) {
+      console.error("Error processing uploaded image:", err);
+      setMessage('❌ Error processing image. Please try another image.');
       setLoading(false);
-      return;
     }
-
-    uploadImage(file);
   };
 
   const uploadImage = async (file) => {
@@ -188,14 +196,31 @@ const Predict = () => {
     const token = localStorage.getItem('authToken'); // Get token from storage
   
     try {
-      const token = localStorage.getItem('authToken');
-      console.log('Token:', token);
-      const res = await axios.post('https://food-classifier-ihbm.onrender.com/predict', formData, {
+      console.log('Uploading image with token:', token);
+      
+      // Create a blob to ensure we're sending the right data
+      let imageBlob;
+      if (file instanceof Blob) {
+        imageBlob = file;
+      } else {
+        // If somehow file isn't a blob (shouldn't happen), create one
+        const response = await fetch(URL.createObjectURL(file));
+        imageBlob = await response.blob();
+      }
+      
+      // Rebuild the FormData with our verified blob
+      const verifiedFormData = new FormData();
+      verifiedFormData.append('image', imageBlob, 'image.jpg');
+      
+      // Make the API request
+      const res = await axios.post('https://food-classifier-ihbm.onrender.com/predict', verifiedFormData, {
         headers: {
-          Authorization: `Bearer ${token}` // 🔐 Add this header
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
       });
-      console.log(res.data);
+      
+      console.log('API Response:', res.data);
       setPrediction(res.data.prediction);
       setMessage('');
     }
@@ -319,6 +344,7 @@ const Predict = () => {
             accept="image/*"
             onChange={handleUpload}
             disabled={loading}
+            id="fileInput"
             style={{
               position: 'absolute',
               top: 0,
@@ -331,7 +357,8 @@ const Predict = () => {
               boxSizing: 'border-box'
             }}
           />
-          <button style={{
+          <label htmlFor="fileInput" style={{
+            display: 'block',
             width: '100%',
             padding: '7px 0',
             borderRadius: '6px',
@@ -341,11 +368,12 @@ const Predict = () => {
             fontWeight: 'bold',
             fontSize: '13px',
             textAlign: 'center',
-            cursor: 'pointer',
-            boxSizing: 'border-box'
+            cursor: loading ? 'not-allowed' : 'pointer',
+            boxSizing: 'border-box',
+            opacity: loading ? 0.7 : 1,
           }}>
             🖼️ Upload Image
-          </button>
+          </label>
         </div>
 
         {message && (
