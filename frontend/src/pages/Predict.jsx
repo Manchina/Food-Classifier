@@ -11,6 +11,7 @@ const Predict = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
+  const [cameraReady, setCameraReady] = useState(false);
 
   const setupCamera = async () => {
     try {
@@ -34,9 +35,17 @@ const Predict = () => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           
-          // Make sure video starts playing
-          await videoRef.current.play();
-          setMessage(''); // Clear any previous messages
+          // Wait for video to be ready
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current.play().then(() => {
+              setCameraReady(true);
+              setMessage(''); // Clear any previous messages
+            }).catch(err => {
+              console.error("Error playing video:", err);
+              setMessage('❌ Error initializing camera');
+              setCameraReady(false);
+            });
+          };
         }
       } catch (err) {
         // If rear camera fails, try the front camera
@@ -54,18 +63,29 @@ const Predict = () => {
           if (videoRef.current) {
             videoRef.current.srcObject = frontStream;
             
-            // Make sure video starts playing
-            await videoRef.current.play();
-            setMessage(''); // Clear any previous messages
+            // Wait for video to be ready
+            videoRef.current.onloadedmetadata = () => {
+              videoRef.current.play().then(() => {
+                setCameraReady(true);
+                setMessage(''); // Clear any previous messages
+              }).catch(err => {
+                console.error("Error playing video:", err);
+                setMessage('❌ Error initializing camera');
+                setCameraReady(false);
+              });
+            };
           }
         } catch (frontErr) {
           // If front camera also fails
-          throw new Error("No cameras available");
+          console.error("No cameras available:", frontErr);
+          setMessage('❌ No camera detected. Please upload an image instead.');
+          setCameraReady(false);
         }
       }
     } catch (err) {
       console.error("Camera access error:", err);
       setMessage('❌ No camera detected. Please upload an image instead.');
+      setCameraReady(false);
     }
   };
 
@@ -109,8 +129,8 @@ const Predict = () => {
     }
 
     // Check if video is available before capturing
-    if (!videoRef.current || !videoRef.current.srcObject) {
-      setMessage('❌ No camera detected. Please upload an image instead.');
+    if (!videoRef.current || !videoRef.current.srcObject || !cameraReady) {
+      setMessage('❌ Camera not ready. Please try again or upload an image instead.');
       return;
     }
 
@@ -185,14 +205,12 @@ const Predict = () => {
     const formData = new FormData();
     formData.append('image', file);
   
-    const token = localStorage.getItem('authToken'); // Get token from storage
-  
     try {
       const token = localStorage.getItem('authToken');
       console.log('Token:', token);
       const res = await axios.post('https://food-classifier-ihbm.onrender.com/predict', formData, {
         headers: {
-          Authorization: `Bearer ${token}` // 🔐 Add this header
+          Authorization: `Bearer ${token}`
         }
       });
       console.log(res.data);
@@ -210,6 +228,9 @@ const Predict = () => {
   
   // Check if the prediction is "No Food Item Is Detected"
   const isNoFoodItem = prediction === "No Food Item Is Detected";
+  
+  // Determine if the capture button should be disabled
+  const isCaptureButtonDisabled = loading || (!capturedImage && !cameraReady);
   
   return (
     <div className="app-container" style={{
@@ -284,19 +305,19 @@ const Predict = () => {
 
         <button
           onClick={captureImage}
-          disabled={loading || (!capturedImage && !videoRef.current?.srcObject)}
+          disabled={isCaptureButtonDisabled}
           style={{
             width: '100%',
             padding: '7px 0',
             marginBottom: '10px',
             borderRadius: '6px',
             border: 'none',
-            cursor: loading || (!capturedImage && !videoRef.current?.srcObject) ? 'not-allowed' : 'pointer',
+            cursor: isCaptureButtonDisabled ? 'not-allowed' : 'pointer',
             background: 'linear-gradient(to right, #6366f1, #8b5cf6)',
             color: 'white',
             fontWeight: 'bold',
             fontSize: '13px',
-            opacity: loading || (!capturedImage && !videoRef.current?.srcObject) ? 0.7 : 1,
+            opacity: isCaptureButtonDisabled ? 0.7 : 1,
             boxSizing: 'border-box'
           }}
         >
