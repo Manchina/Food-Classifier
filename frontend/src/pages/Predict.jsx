@@ -12,37 +12,62 @@ const Predict = () => {
   const [loading, setLoading] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
 
- const setupCamera = async () => {
-  try {
-    // Stop any existing stream first
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-    }
-
-    // Get a new stream with rear camera specified
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { exact: "environment" }
+  const setupCamera = async () => {
+    try {
+      // Stop any existing stream first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
-    });
-    
-    // Store the stream reference
-    streamRef.current = stream;
-    
-    // Connect to video element if it exists
-    if (videoRef.current) {
-      videoRef.current.srcObject = stream;
-      
-      // Make sure video starts playing
-      videoRef.current.play().catch(err => {
-        console.error("Error playing video:", err);
-      });
+
+      try {
+        // First try to access the rear camera
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { exact: "environment" }
+          }
+        });
+        
+        // Store the stream reference
+        streamRef.current = stream;
+        
+        // Connect to video element if it exists
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          
+          // Make sure video starts playing
+          await videoRef.current.play();
+          setMessage(''); // Clear any previous messages
+        }
+      } catch (err) {
+        // If rear camera fails, try the front camera
+        console.log("Rear camera not available, trying front camera:", err);
+        
+        try {
+          const frontStream = await navigator.mediaDevices.getUserMedia({
+            video: true // Request any available camera
+          });
+          
+          // Store the stream reference
+          streamRef.current = frontStream;
+          
+          // Connect to video element if it exists
+          if (videoRef.current) {
+            videoRef.current.srcObject = frontStream;
+            
+            // Make sure video starts playing
+            await videoRef.current.play();
+            setMessage(''); // Clear any previous messages
+          }
+        } catch (frontErr) {
+          // If front camera also fails
+          throw new Error("No cameras available");
+        }
+      }
+    } catch (err) {
+      console.error("Camera access error:", err);
+      setMessage('❌ No camera detected. Please upload an image instead.');
     }
-  } catch (err) {
-    console.error("Camera access denied:", err);
-    setMessage('❌ Camera access denied or rear camera not available. Please check permissions.');
-  }
-};
+  };
 
   useEffect(() => {
     setupCamera();
@@ -80,6 +105,12 @@ const Predict = () => {
         setupCamera();
       }, 100);
       
+      return;
+    }
+
+    // Check if video is available before capturing
+    if (!videoRef.current || !videoRef.current.srcObject) {
+      setMessage('❌ No camera detected. Please upload an image instead.');
       return;
     }
 
@@ -157,8 +188,8 @@ const Predict = () => {
     const token = localStorage.getItem('authToken'); // Get token from storage
   
     try {
-        const token = localStorage.getItem('authToken');
-        console.log('Token:', token);
+      const token = localStorage.getItem('authToken');
+      console.log('Token:', token);
       const res = await axios.post('https://food-classifier-ihbm.onrender.com/predict', formData, {
         headers: {
           Authorization: `Bearer ${token}` // 🔐 Add this header
@@ -168,7 +199,7 @@ const Predict = () => {
       setPrediction(res.data.prediction);
       setMessage('');
     }
-     catch (err) {
+    catch (err) {
       console.error('Upload failed:', err);
       setMessage('⚠️ Upload failed. Try again.');
       setPrediction('');
@@ -176,7 +207,6 @@ const Predict = () => {
       setLoading(false);
     }
   };
-  
   
   // Check if the prediction is "No Food Item Is Detected"
   const isNoFoodItem = prediction === "No Food Item Is Detected";
@@ -254,19 +284,19 @@ const Predict = () => {
 
         <button
           onClick={captureImage}
-          disabled={loading}
+          disabled={loading || (!capturedImage && !videoRef.current?.srcObject)}
           style={{
             width: '100%',
             padding: '7px 0',
             marginBottom: '10px',
             borderRadius: '6px',
             border: 'none',
-            cursor: loading ? 'not-allowed' : 'pointer',
+            cursor: loading || (!capturedImage && !videoRef.current?.srcObject) ? 'not-allowed' : 'pointer',
             background: 'linear-gradient(to right, #6366f1, #8b5cf6)',
             color: 'white',
             fontWeight: 'bold',
             fontSize: '13px',
-            opacity: loading ? 0.7 : 1,
+            opacity: loading || (!capturedImage && !videoRef.current?.srcObject) ? 0.7 : 1,
             boxSizing: 'border-box'
           }}
         >
@@ -322,10 +352,10 @@ const Predict = () => {
           <div style={{
             marginTop: '10px',
             padding: '6px',
-            backgroundColor: 'rgba(234, 179, 8, 0.2)',
-            border: '1px solid #eab308',
+            backgroundColor: message.includes('❌') ? 'rgba(234, 179, 8, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+            border: message.includes('❌') ? '1px solid #eab308' : '1px solid #3b82f6',
             borderRadius: '6px',
-            color: '#fde047',
+            color: message.includes('❌') ? '#fde047' : '#93c5fd',
             fontSize: '11px',
             boxSizing: 'border-box'
           }}>

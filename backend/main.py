@@ -96,12 +96,18 @@ async def predict_image(
 ):
     image_bytes = await image.read()
 
-    # Step 1: Multiclass Prediction (updated to use new model)
+    # Step 1: Multiclass Prediction (updated to use threshold)
     processed_image = preprocess_image(image_bytes)
     predictions = model.predict(processed_image)
     predicted_index = np.argmax(predictions[0])
-    predicted_class = class_labels[predicted_index]
     confidence = float(predictions[0][predicted_index])
+
+    THRESHOLD = 0.6  # adjust this value based on your experiments
+    if confidence >= THRESHOLD:
+        predicted_class = class_labels[predicted_index]
+    else:
+        predicted_class = "Unable to classify"
+        confidence = 0.0  # reset confidence for unknown
 
     # Step 2: Upload image to Cloudinary
     image_url = upload_image_to_cloudinary(image_bytes)
@@ -121,6 +127,7 @@ async def predict_image(
         "confidence": confidence,
         "image_url": image_url
     }
+
 
 
 @app.get("/history")
