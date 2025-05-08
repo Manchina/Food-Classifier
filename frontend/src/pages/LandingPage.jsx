@@ -164,7 +164,7 @@ const LandingPage = () => {
                 color: '#a5b4fc',
                 lineHeight: '1.5'
               }}>
-                Our system can identify a variety of food items from different cuisines around the world.
+                Our system can identify 20 types of foods from Indian cuisine.
               </p>
             </div>
           </div>
