@@ -111,7 +111,7 @@ async def predict_image(
         return {
         "prediction": predicted_class,
         "confidence": confidence,
-        "image_url": image_url
+        "image_url": ""
         }
 
     # Step 2: Upload image to Cloudinary
