@@ -106,8 +106,13 @@ async def predict_image(
     if confidence >= THRESHOLD:
         predicted_class = class_labels[predicted_index]
     else:
-        predicted_class = "Unable to classify"
+        predicted_class = "Unable to Detect"
         confidence = 0.0  # reset confidence for unknown
+        return {
+        "prediction": predicted_class,
+        "confidence": confidence,
+        "image_url": image_url
+        }
 
     # Step 2: Upload image to Cloudinary
     image_url = upload_image_to_cloudinary(image_bytes)

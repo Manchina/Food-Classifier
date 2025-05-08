@@ -179,7 +179,7 @@ const Predict = () => {
   
   
   // Check if the prediction is "No Food Item Is Detected"
-  const isNoFoodItem = prediction === "Unable to classify";
+  const isNoFoodItem = prediction === "Unable to Detect";
   
   return (
     <div className="app-container" style={{
