@@ -19,41 +19,50 @@ const Predict = () => {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
 
-    // Get a new stream with rear camera specified
+    // Try to get the rear camera
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { exact: "environment" }
-      }
+      video: { facingMode: { exact: "environment" } }
     });
-    
-    // Store the stream reference
+
     streamRef.current = stream;
-    
-    // Connect to video element if it exists
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
-      
-      // Make sure video starts playing
       videoRef.current.play().catch(err => {
         console.error("Error playing video:", err);
       });
     }
-  } catch (err) {
-    console.error("Camera access denied:", err);
-    setMessage('❌ Camera access denied or rear camera not available. Please check permissions.');
+  } catch (rearCamError) {
+    console.warn("Rear camera not available. Falling back to front camera.");
+
+    try {
+      const frontStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" }
+      });
+
+      streamRef.current = frontStream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = frontStream;
+        videoRef.current.play().catch(err => {
+          console.error("Error playing video:", err);
+        });
+      }
+    } catch (frontCamError) {
+      console.error("Camera access denied:", frontCamError);
+      setMessage('❌ Camera access denied or no camera available. Please check permissions.');
+    }
   }
 };
 
-  useEffect(() => {
-    setupCamera();
-    
-    // Cleanup function to stop camera when component unmounts
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
+useEffect(() => {
+  setupCamera();
+
+  return () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+  };
+}, []);
+
 
   const hasObject = (imageData) => {
     const pixels = imageData.data;
