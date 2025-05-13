@@ -8,6 +8,7 @@ const Predict = () => {
   const canvasRef = useRef(null);
   const streamRef = useRef(null); // Store the camera stream reference
   const [prediction, setPrediction] = useState('');
+  const [category, setCategory] = useState(''); // New state for food category
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
@@ -82,6 +83,7 @@ useEffect(() => {
     if (capturedImage) {
       setCapturedImage(null);
       setPrediction('');
+      setCategory(''); // Reset category when going back to camera
       setMessage('');
       
       // Ensure we reinitialize camera when going back
@@ -95,6 +97,7 @@ useEffect(() => {
     setLoading(true);
     setMessage('');
     setPrediction('');
+    setCategory(''); // Reset category when capturing new image
     
     const canvas = canvasRef.current;
     const context = canvas.getContext('2d');
@@ -114,6 +117,7 @@ useEffect(() => {
     if (!hasObject(imageData)) {
       setMessage('❌ No object detected! Try again.');
       setPrediction('');
+      setCategory('');
       setLoading(false);
       return;
     }
@@ -133,6 +137,7 @@ useEffect(() => {
     setLoading(true);
     setMessage('');
     setPrediction('');
+    setCategory('');
 
     // Create a preview of the uploaded image
     const reader = new FileReader();
@@ -152,6 +157,7 @@ useEffect(() => {
     if (!hasObject(imageData)) {
       setMessage('❌ No object detected! Try another image.');
       setPrediction('');
+      setCategory('');
       setLoading(false);
       return;
     }
@@ -175,12 +181,22 @@ useEffect(() => {
       });
       console.log(res.data);
       setPrediction(res.data.prediction);
+      
+      // Handle the food category from response
+      // If the response includes category, use it; otherwise, set to empty
+      if (res.data.category) {
+        setCategory(res.data.category);
+      } else {
+        setCategory('');
+      }
+      
       setMessage('');
     }
      catch (err) {
       console.error('Upload failed:', err);
       setMessage('⚠️ Upload failed. Try again.');
       setPrediction('');
+      setCategory('');
     } finally {
       setLoading(false);
     }
@@ -345,7 +361,7 @@ useEffect(() => {
         {prediction && (
           <div style={{
             marginTop: '10px',
-            padding: '6px',
+            padding: '10px',
             backgroundColor: isNoFoodItem ? 'rgba(220, 38, 38, 0.2)' : 'rgba(34, 197, 94, 0.2)',
             border: isNoFoodItem ? '1px solid #dc2626' : '1px solid #22c55e',
             borderRadius: '6px',
@@ -354,7 +370,12 @@ useEffect(() => {
             fontWeight: 'bold',
             boxSizing: 'border-box'
           }}>
-            {isNoFoodItem ? prediction : `Item: ${prediction}`}
+            {isNoFoodItem ? prediction : (
+              <div>
+                <div>Item: {prediction}</div>
+                {category && <div style={{ marginTop: '4px' }}>Category: {category}</div>}
+              </div>
+            )}
           </div>
         )}
       </div>

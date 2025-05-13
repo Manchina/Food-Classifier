@@ -51,6 +51,30 @@ class_labels = [
     'Paani_puri', 'Pakode', 'Pav Bhaji', 'Pizza', 'Samosa'
 ]
 
+item_to_category = {
+    'Burger': 'Fast Food',
+    'Butter Naan': 'Indian Bread',
+    'Chai': 'Beverage',
+    'Chapati': 'Indian Bread',
+    'Chole Bhature': 'North Indian',
+    'Dal Makhani': 'North Indian',
+    'Dhokla': 'Snack',
+    'Fried Rice': 'Chinese',
+    'Idli': 'South Indian',
+    'Jalebi': 'Dessert',
+    'Kaathi Rolls': 'Fast Food',
+    'Kadai Paneer': 'North Indian',
+    'Kulfi': 'Dessert',
+    'Masala Dosa': 'South Indian',
+    'Momos': 'Chinese',
+    'Paani_puri': 'Street Food',
+    'Pakode': 'Snack',
+    'Pav Bhaji': 'Street Food',
+    'Pizza': 'Fast Food',
+    'Samosa': 'Snack'
+}
+
+
 # === IMAGE PROCESSING ===
 def preprocess_image(image_bytes):
     """Process image for the new food classifier model"""
@@ -105,6 +129,7 @@ async def predict_image(
     THRESHOLD = 0.6  # adjust this value based on your experiments
     if confidence >= THRESHOLD:
         predicted_class = class_labels[predicted_index]
+        category = item_to_category.get(predicted_class)
     else:
         predicted_class = "Unable to Detect"
         confidence = 0.0  # reset confidence for unknown
@@ -129,6 +154,7 @@ async def predict_image(
 
     return {
         "prediction": predicted_class,
+        "category": category,
         "confidence": confidence,
         "image_url": image_url
     }
