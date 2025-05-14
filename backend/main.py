@@ -48,7 +48,7 @@ class_labels = [
     'Burger', 'Butter Naan', 'Chai', 'Chapati', 'Chole Bhature',
     'Dal Makhani', 'Dhokla', 'Fried Rice', 'Idli', 'Jalebi',
     'Kaathi Rolls', 'Kadai Paneer', 'Kulfi', 'Masala Dosa', 'Momos',
-    'Paani_puri', 'Pakode', 'Pav Bhaji', 'Pizza', 'Samosa'
+    'Paani Puri', 'Pakode', 'Pav Bhaji', 'Pizza', 'Samosa'
 ]
 
 item_to_category = {
