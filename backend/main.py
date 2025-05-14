@@ -67,7 +67,7 @@ item_to_category = {
     'Kulfi': 'Dessert',
     'Masala Dosa': 'South Indian',
     'Momos': 'Chinese',
-    'Paani_puri': 'Street Food',
+    'Paani Puri': 'Street Food',
     'Pakode': 'Snack',
     'Pav Bhaji': 'Street Food',
     'Pizza': 'Fast Food',
