@@ -19,30 +19,37 @@ const Predict = () => {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
 
-    // Get a new stream with rear camera specified
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { exact: "environment" }
-      }
-    });
-    
+    // Try to get the rear camera first
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { exact: "environment" }
+        }
+      });
+    } catch (err) {
+      // Fall back to any camera if rear camera is not available
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: true
+      });
+    }
+
     // Store the stream reference
     streamRef.current = stream;
-    
+
     // Connect to video element if it exists
     if (videoRef.current) {
       videoRef.current.srcObject = stream;
-      
+
       // Make sure video starts playing
-      videoRef.current.play().catch(err => {
-        console.error("Error playing video:", err);
-      });
+      await videoRef.current.play();
     }
   } catch (err) {
     console.error("Camera access denied:", err);
     setMessage('❌ Camera access denied or rear camera not available. Please check permissions.');
   }
 };
+
 
   useEffect(() => {
     setupCamera();
@@ -159,7 +166,7 @@ const Predict = () => {
     try {
         const token = localStorage.getItem('authToken');
         console.log('Token:', token);
-      const res = await axios.post('https://food-classifier-ihbm.onrender.com/predict', formData, {
+      const res = await axios.post('http://127.0.0.1:8000/predict', formData, {
         headers: {
           Authorization: `Bearer ${token}` // 🔐 Add this header
         }
