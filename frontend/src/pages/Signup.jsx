@@ -30,7 +30,7 @@ const Signup = () => {
       formData.append('username', username);
       formData.append('password', password);
 
-      const response = await axios.post('http://127.0.0.1:8000/signup', formData, {
+      const response = await axios.post('https://food-classifier-ihbm.onrender.com/signup', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
