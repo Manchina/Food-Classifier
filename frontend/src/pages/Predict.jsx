@@ -166,7 +166,7 @@ const Predict = () => {
     try {
         const token = localStorage.getItem('authToken');
         console.log('Token:', token);
-      const res = await axios.post('http://127.0.0.1:8000/predict', formData, {
+      const res = await axios.post('https://food-classifier-ihbm.onrender.com/predict', formData, {
         headers: {
           Authorization: `Bearer ${token}` // 🔐 Add this header
         }
